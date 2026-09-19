@@ -1,37 +1,62 @@
+'use client';
+
 import React from 'react';
+import Link from 'next/link';
 
-export function AppBar() {
+interface SectionHeaderProps {
+  title: string;
+  moreText?: string;
+  href?: string;
+  onMoreClick?: () => void;
+}
+
+export const SectionHeader: React.FC<SectionHeaderProps> = ({
+  title,
+  moreText = '一覧 >',
+  href,
+  onMoreClick,
+}) => {
   return (
-    <header className="fixed top-0 left-0 right-0 max-w-[720px] mx-auto h-[56px] bg-[var(--color-primary)] text-white flex items-center justify-between px-4 font-bold text-lg z-20 shadow-sm">
-      {/* 左側ダミー（ロゴを中央に配置するためのスペース） */}
-      <div className="w-[44px] h-[44px]" />
-
-      {/* 中央：ロゴ / サイト名 */}
-      <div className="tracking-wide text-[18px]">
-        エステポケット
+    <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-[var(--color-border)]">
+      {/* 見出しブロック */}
+      <div className="flex items-center gap-1.5 min-w-0 pr-2">
+        {/* ひし形記号（◆） */}
+        <span
+          className="text-[var(--color-primary)] font-bold text-[14px] shrink-0 select-none"
+          aria-hidden="true"
+        >
+          ◆
+        </span>
+        {/* セクションタイトル（17px / 太字 / 長い場合は省略） */}
+        <h2 className="font-bold text-[17px] leading-[1.4] text-[var(--color-text)] truncate">
+          {title}
+        </h2>
       </div>
 
-      {/* 右側：検索アイコン (タップ領域 44x44px) */}
-      <button
-        type="button"
-        aria-label="検索"
-        className="w-[44px] h-[44px] flex items-center justify-center -mr-2 hover:opacity-80 transition-opacity"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2}
-          stroke="currentColor"
-          className="w-6 h-6"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z"
-          />
-        </svg>
-      </button>
-    </header>
+      {/* もっと見る / 一覧 リンクボタン */}
+      {(href || onMoreClick) && (
+        <div className="shrink-0">
+          {href ? (
+            <Link
+              href={href}
+              className="text-[13px] font-bold text-[var(--color-primary)] hover:underline active:opacity-70 transition-opacity"
+            >
+              {moreText}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={onMoreClick}
+              className="text-[13px] font-bold text-[var(--color-primary)] hover:underline active:opacity-70 transition-opacity"
+            >
+              {moreText}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
-}
+};
+
+// デフォルトエクスポートも追加しておくことで、どちらのインポート方法でもエラーにならなくなります
+export default SectionHeader;
