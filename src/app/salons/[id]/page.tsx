@@ -89,7 +89,7 @@ export default async function SalonDetailPage({ params }: PageProps) {
           {/* カバー画像 */}
           <div className="relative h-48 md:h-64 w-full bg-zinc-800">
             <img
-              src={salon.image_url || "/images/no-image.svg"}
+              src={salon.image_url || "/images/no-image.png"}
               alt={salon.name}
               className="w-full h-full object-cover"
             />
@@ -248,7 +248,7 @@ export default async function SalonDetailPage({ params }: PageProps) {
                 >
                   <div className="relative aspect-[3/4] bg-zinc-800 overflow-hidden">
                     <img
-                      src={therapist.image_url || "/images/no-avatar.svg"}
+                      src={therapist.image_url || "/images/no-avatar.png"}
                       alt={therapist.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                     />

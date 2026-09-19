@@ -41,7 +41,7 @@ export default function OwnerRegisterPage() {
     // 店舗情報 (salonsDB仕様)
     categoryId: '1', // デフォルト: 店舗型(1)
     name: '',
-    catchphrase: '',
+    chechphrase: '',
     imageUrl: '',
     useLocationId: '9', // デフォルト: 大宮(9)
     priceInfo: '',
@@ -89,7 +89,7 @@ export default function OwnerRegisterPage() {
         {
           category_id: Number(formData.categoryId),
           name: formData.name,
-          catchphrase: formData.catchphrase,
+          chechphrase: formData.chechphrase,
           image_url: formData.imageUrl,
           is_published: false, // 初期値は非公開（審査待ち）
           use_location_id: Number(formData.useLocationId),
@@ -234,8 +234,8 @@ export default function OwnerRegisterPage() {
               <input
                 type="text"
                 required
-                value={formData.catchphrase}
-                onChange={(e) => setFormData({ ...formData, catchphrase: e.target.value })}
+                value={formData.chechphrase}
+                onChange={(e) => setFormData({ ...formData, chechphrase: e.target.value })}
                 className="w-full rounded-lg bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-100 outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 placeholder="極上のリラクゼーション空間をお届けします"
               />
