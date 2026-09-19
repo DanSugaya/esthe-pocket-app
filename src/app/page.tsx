@@ -1,6 +1,6 @@
-import { AppBar } from '../components/AppBar';
-import { TabBar } from '../components/TabBar';
-import { SectionHeader } from '../components/SectionHeader';
+import { AppBar } from '@/components/AppBar';
+import { TabBar } from '@/components/TabBar';
+import { SectionHeader } from '@/components/SectionHeader';
 
 export default function Home() {
   return (
