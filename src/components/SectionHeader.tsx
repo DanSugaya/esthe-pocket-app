@@ -10,6 +10,7 @@ interface SectionHeaderProps {
   onMoreClick?: () => void;
 }
 
+// 1. 名前付きエクスポート (export const SectionHeader = ...)
 export const SectionHeader: React.FC<SectionHeaderProps> = ({
   title,
   moreText = '一覧 >',
@@ -58,5 +59,5 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
   );
 };
 
-// デフォルトエクスポートも追加しておくことで、どちらのインポート方法でもエラーにならなくなります
+// 2. デフォルトエクスポートも併せて出力
 export default SectionHeader;
