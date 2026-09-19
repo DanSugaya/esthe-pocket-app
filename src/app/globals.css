@@ -1,109 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  /* ==========================================
-     既存・基本変数
-     ========================================== */
   --background: #ffffff;
   --foreground: #171717;
-
-  /* ==========================================
-     デザインシステム (エステポケット) トークン
-     ========================================== */
-  /* 2.1 カラー定義 */
-  --color-primary: #1B2F8F;
-  --color-primary-dark: #12206A;
-  --color-primary-light: #E8ECFA;
-  --color-accent-promo: #E0407F;
-  --color-accent-like: #D93025;
-  --color-accent-star: #F5A623;
-  --color-accent-point: #FFE234;
-  --color-success: #2E9E5B;
-  --color-text: #222222;
-  --color-text-sub: #888888;
-  --color-border: #E0E0E0;
-  --color-divider-strong: #DADADA;
-  --color-bg: #FFFFFF;
-  --color-bg-sub: #F4F4F4;
-  --color-overlay: rgba(18, 32, 106, 0.85);
-  --color-scrim: rgba(0, 0, 0, 0.35);
-
-  /* 2.3 スペーシング (4pxグリッド) */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-
-  /* 2.4 角丸 */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-pill: 999px;
-  --radius-circle: 50%;
-
-  /* 2.4 境界線・影・サイズ */
-  --border-card: 1px solid var(--color-border);
-  --border-outline: 2px solid var(--color-primary);
-  --border-section: 2px solid var(--color-divider-strong);
-
-  --shadow-float: 0 2px 8px rgba(0, 0, 0, 0.25);
-  --shadow-action: 0 2px 6px rgba(0, 0, 0, 0.15);
-
-  --size-action: 54px;
-  --size-status: 52px;
-  --btn-h-lg: 52px;
-
-  /* レイアウト固定値 */
-  --header-h: 56px;
-  --tabbar-h: 64px;
-  --sticky-cta-h: 56px;
 }
 
-/* ==========================================
-   Tailwind CSS v4 カスタムテーマ拡張
-   ========================================== */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-
-  /* エステポケット用カラー登録 */
-  --color-esthe-primary: var(--color-primary);
-  --color-esthe-primary-dark: var(--color-primary-dark);
-  --color-esthe-primary-light: var(--color-primary-light);
-  --color-esthe-promo: var(--color-accent-promo);
-  --color-esthe-like: var(--color-accent-like);
-  --color-esthe-star: var(--color-accent-star);
-  --color-esthe-point: var(--color-accent-point);
-  --color-esthe-success: var(--color-success);
-  --color-esthe-text: var(--color-text);
-  --color-esthe-sub: var(--color-text-sub);
-  --color-esthe-border: var(--color-border);
-  --color-esthe-divider: var(--color-divider-strong);
-  --color-esthe-bg: var(--color-bg);
-  --color-esthe-bg-sub: var(--color-bg-sub);
-  --color-esthe-overlay: var(--color-overlay);
-  --color-esthe-scrim: var(--color-scrim);
-
-  /* スペーシング拡張 */
-  --spacing-space-1: var(--space-1);
-  --spacing-space-2: var(--space-2);
-  --spacing-space-3: var(--space-3);
-  --spacing-space-4: var(--space-4);
-  --spacing-space-5: var(--space-5);
-  --spacing-space-6: var(--space-6);
-
-  /* 角丸拡張 */
-  --radius-sm: var(--radius-sm);
-  --radius-md: var(--radius-md);
-  --radius-lg: var(--radius-lg);
-  --radius-pill: var(--radius-pill);
-  --radius-circle: var(--radius-circle);
-
-  /* 影拡張 */
-  --shadow-float: var(--shadow-float);
-  --shadow-action: var(--shadow-action);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -113,108 +19,26 @@
   }
 }
 
-/* ==========================================
-   ベーススタイル設定
-   ========================================== */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
-  -webkit-font-smoothing: antialiased;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-/* ==========================================
-   主要コンポーネント ユーティリティクラス（デザインシステム§13準拠）
-   ========================================== */
-
-/* 4.17 Outline Chip (特徴タグ) */
-.chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 14px;
-  border-radius: var(--radius-md);
-  border: 2px solid #888888;
-  color: var(--color-text-sub);
-  font-size: 14px;
-  line-height: 1.2;
+/* --- Swiper コンパクト配置用追加スタイル --- */
+.compact-swiper .swiper-pagination {
+  bottom: 6px !important; /* ドットを画像の下端近くに配置 */
 }
 
-.chip--brand {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  font-weight: 700;
-}
-
-/* 4.19 Status Circle (ステータス丸) */
-.status {
-  width: var(--size-status);
-  height: var(--size-status);
-  border-radius: var(--radius-circle);
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  color: #ffffff;
-  text-align: center;
-}
-
-.status--working {
-  background: var(--color-primary);
-}
-
-.status--available {
-  background: var(--color-success);
-}
-
-.status--coupon {
-  background: var(--color-accent-point);
-  color: var(--color-text);
-}
-
-.status--off {
-  background: #BDBDBD;
-}
-
-/* 4.9 Outline Large (全件表示ボタン等) */
-.btn-outline-lg {
-  width: 100%;
-  height: var(--btn-h-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+.compact-swiper .swiper-pagination-bullet {
+  width: 6px;
+  height: 6px;
+  margin: 0 3px !important;
   background: #ffffff;
-  color: var(--color-primary);
-  border: var(--border-outline);
-  border-radius: var(--radius-md);
-  font-size: 16px;
-  font-weight: 700;
+  opacity: 0.6;
 }
 
-.btn-outline-lg > svg {
-  position: absolute;
-  right: 12px;
-}
-
-/* 4.22 Coupon FAB (クーポンGETフローティングボタン) */
-.coupon-fab {
-  position: fixed;
-  right: -8px;
-  bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom));
-  width: 88px;
-  height: 72px;
-  padding-right: 8px;
-  border-radius: 36px 0 0 36px;
-  background: var(--color-accent-point);
-  color: var(--color-text);
-  box-shadow: var(--shadow-float);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  z-index: 30;
+.compact-swiper .swiper-pagination-bullet-active {
+  background: #0070f3; /* アクティブ時のドット色（サイトのテーマに合わせて調整可能） */
+  opacity: 1;
 }
