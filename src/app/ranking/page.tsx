@@ -3,7 +3,10 @@ import Image from "next/image";
 import { AppBar } from "@/components/AppBar";
 import { SectionHeader } from "@/components/SectionHeader";
 import { TabBar } from "@/components/TabBar";
-import { image } from "@/components/data";
+
+// 仮の画像関数（どんなエリア名が渡されてもプレースホルダー画像パスを返す）
+const image = (area: string) => "/images/placeholder.jpg"; 
+// ※ 既存の共通画像があれば "/favicon.ico" や実際の画像パスに変更しても構いません
 
 const ranking = [
   { id: "1", name: "極上アロマ 恵比寿本店", area: "恵比寿", likes: 2530, favorites: 1204 },
