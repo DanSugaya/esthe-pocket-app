@@ -1,133 +1,110 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, Share2 } from "lucide-react";
 
-interface DetailAppBarClientProps {
+type DetailAppBarClientProps = {
   title: string;
-  sentinelRef?: React.RefObject<HTMLDivElement | null>;
+  /**
+   * ヒーロー下端に置いた番兵要素の id。
+   * Server Component から ref は渡せないため、id で受け取る。
+   */
+  sentinelId?: string;
   onBack?: () => void;
-}
+};
 
-export const DetailAppBarClient: React.FC<DetailAppBarClientProps> = ({
+const HEADER_H = 56;
+
+const iconButton =
+  "relative flex h-10 w-10 items-center justify-center rounded-full text-white " +
+  "transition-colors duration-150 ease-in-out motion-reduce:transition-none " +
+  // 見た目は40px、タップ領域は44px(designsystem 4.9)
+  "before:absolute before:-inset-0.5 before:content-[''] " +
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+
+export default function DetailAppBarClient({
   title,
-  sentinelRef,
+  sentinelId = "hero-sentinel",
   onBack,
-}) => {
+}: DetailAppBarClientProps) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const fallbackRef = useRef<HTMLDivElement | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    const targetEl = sentinelRef?.current || fallbackRef.current;
-    if (!targetEl) return;
+    const el = document.getElementById(sentinelId);
+    if (!el) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsScrolled(!entry.isIntersecting);
+        // 「ヘッダーの下に潜った」ときだけ true。
+        // 画面が低く、番兵が画面の下側にある場合(交差していない)は false のまま。
+        setIsScrolled(!entry.isIntersecting && entry.boundingClientRect.top < HEADER_H);
       },
-      {
-        root: null,
-        rootMargin: "-56px 0px 0px 0px",
-        threshold: 0,
-      }
+      { root: null, rootMargin: `-${HEADER_H}px 0px 0px 0px`, threshold: 0 }
     );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [sentinelId]);
 
-    observer.observe(targetEl);
+  useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
-    return () => {
-      observer.disconnect();
-    };
-  }, [sentinelRef]);
+  const showToast = (message: string) => {
+    setToast(message);
+    window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 2000);
+  };
 
   const handleBack = () => {
-    if (onBack) {
-      onBack();
-    } else if (typeof window !== "undefined") {
-      window.history.back();
-    }
+    if (onBack) onBack();
+    else window.history.back();
   };
 
   const handleShare = async () => {
-    const shareData = {
-      title,
-      url: typeof window !== "undefined" ? window.location.href : "",
-    };
+    const url = window.location.href;
 
-    if (navigator.share) {
+    if (typeof navigator.share === "function") {
       try {
-        await navigator.share(shareData);
+        await navigator.share({ title, url });
       } catch {
-        // キャンセル処理
+        // ユーザーがキャンセルした場合など。何もしない
       }
-    } else {
-      try {
-        await navigator.clipboard.writeText(shareData.url);
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 2000);
-      } catch (err) {
-        console.error("Failed to copy URL:", err);
-      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast("URLをコピーしました");
+    } catch {
+      showToast("URLをコピーできませんでした");
     }
   };
+
+  const circleBg = isScrolled ? "bg-transparent" : "bg-[var(--color-scrim)]";
 
   return (
     <>
       <header
-        aria-label="ヘッダー"
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "var(--header-h, 56px)",
-          zIndex: 40,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingLeft: "var(--space-4, 16px)",
-          paddingRight: "var(--space-4, 16px)",
-          backgroundColor: isScrolled ? "var(--color-primary, #1B2F8F)" : "transparent",
-          transition: "background-color 150ms ease",
-        }}
+        style={{ height: "var(--header-h, 56px)" }}
+        className={`fixed inset-x-0 top-0 z-40 flex items-center justify-between px-4 transition-colors duration-150 ease-in-out motion-reduce:transition-none ${
+          isScrolled ? "bg-[var(--color-primary)]" : "bg-transparent"
+        }`}
       >
         <button
           type="button"
           onClick={handleBack}
           aria-label="前のページへ戻る"
-          style={{
-            width: "40px",
-            height: "40px",
-            borderRadius: "var(--radius-circle, 50%)",
-            backgroundColor: isScrolled ? "transparent" : "var(--color-scrim, rgba(0,0,0,0.35))",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            border: "none",
-            color: "#FFFFFF",
-            cursor: "pointer",
-            transition: "background-color 150ms ease",
-          }}
+          className={`${iconButton} ${circleBg}`}
         >
           <ChevronLeft size={24} aria-hidden="true" />
         </button>
 
+        {/* ページ最上部では非表示(h1 が本文にあるため読み上げ対象からも外す) */}
         <div
-          style={{
-            flex: 1,
-            marginLeft: "var(--space-3, 12px)",
-            marginRight: "var(--space-3, 12px)",
-            textAlign: "center",
-            opacity: isScrolled ? 1 : 0,
-            transition: "opacity 150ms ease",
-            overflow: "hidden",
-            whiteSpace: "nowrap",
-            textOverflow: "ellipsis",
-            color: "#FFFFFF",
-            fontSize: "14px",
-            lineHeight: "1.4",
-            fontWeight: 700,
-          }}
+          aria-hidden={!isScrolled}
+          className={`mx-3 min-w-0 flex-1 truncate text-center text-[14px] font-bold leading-[1.4] text-white transition-opacity duration-150 motion-reduce:transition-none ${
+            isScrolled ? "opacity-100" : "opacity-0"
+          }`}
         >
           {title}
         </div>
@@ -135,50 +112,33 @@ export const DetailAppBarClient: React.FC<DetailAppBarClientProps> = ({
         <button
           type="button"
           onClick={handleShare}
-          aria-label="情報をシェア"
-          style={{
-            width: "40px",
-            height: "40px",
-            borderRadius: "var(--radius-circle, 50%)",
-            backgroundColor: isScrolled ? "transparent" : "var(--color-scrim, rgba(0,0,0,0.35))",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            border: "none",
-            color: "#FFFFFF",
-            cursor: "pointer",
-            transition: "background-color 150ms ease",
-          }}
+          aria-label="このページをシェア"
+          className={`${iconButton} ${circleBg}`}
         >
           <Share2 size={22} aria-hidden="true" />
         </button>
       </header>
 
-      {showToast && (
-        <div
-          role="status"
-          aria-live="polite"
-          style={{
-            position: "fixed",
-            bottom: "calc(var(--tabbar-h, 64px) + 24px)",
-            left: "50%",
-            transform: "translateX(-50%)",
-            backgroundColor: "rgba(34, 34, 34, 0.9)",
-            color: "#FFFFFF",
-            padding: "8px 16px",
-            borderRadius: "var(--radius-pill, 999px)",
-            fontSize: "13px",
-            fontWeight: 500,
-            zIndex: 50,
-            pointerEvents: "none",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-          }}
-        >
-          URLをコピーしました
-        </div>
-      )}
+      {/* ライブリージョンは常に存在させる(後から挿入すると読み上げされないことがある) */}
+      <div
+        role="status"
+        aria-live="polite"
+        className="pointer-events-none fixed inset-x-0 z-50 flex justify-center"
+        style={{
+          // 下部タブ + 追従CTA の上
+          bottom:
+            "calc(var(--tabbar-h, 64px) + var(--sticky-cta-h, 56px) + 24px + env(safe-area-inset-bottom))",
+        }}
+      >
+        {toast && (
+          <span
+            className="rounded-[var(--radius-pill)] px-4 py-2 text-[13px] font-medium text-white"
+            style={{ backgroundColor: "rgba(34, 34, 34, 0.9)" }}
+          >
+            {toast}
+          </span>
+        )}
+      </div>
     </>
   );
-};
-
-export default DetailAppBarClient;
+}

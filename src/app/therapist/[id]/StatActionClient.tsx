@@ -1,190 +1,85 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import { Star, ThumbsUp } from "lucide-react";
+import { useTherapistActions } from "./TherapistActionsProvider";
 
-interface StatActionClientProps {
-  initialLikes: number;
-  initialFavorites: number;
-  isLikedInitial?: boolean;
-  isFavoritedInitial?: boolean;
-  isLoggedIn?: boolean;
-  onRequireLogin?: () => void;
-  onToggleLike?: (nextState: boolean) => Promise<void>;
-  onToggleFavorite?: (nextState: boolean) => Promise<void>;
-}
+type StatActionClientProps = {
+  /** 指標の下に出す補足(最大2行。例: 本日の出勤 / 累計指名) */
+  notes?: string[];
+};
 
-export const StatActionClient: React.FC<StatActionClientProps> = ({
-  initialLikes,
-  initialFavorites,
-  isLikedInitial = false,
-  isFavoritedInitial = false,
-  isLoggedIn = false,
-  onRequireLogin,
-  onToggleLike,
-  onToggleFavorite,
-}) => {
-  const [isLiked, setIsLiked] = useState<boolean>(isLikedInitial);
-  const [likesCount, setLikesCount] = useState<number>(initialLikes);
-  const [isFavorited, setIsFavorited] = useState<boolean>(isFavoritedInitial);
-  const [favoritesCount, setFavoritesCount] = useState<number>(initialFavorites);
+const actionButton =
+  "flex h-[var(--size-action,54px)] w-[var(--size-action,54px)] items-center justify-center " +
+  "rounded-[var(--radius-circle)] bg-[var(--color-bg)] " +
+  "transition-transform duration-200 ease-out active:scale-95 " +
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 " +
+  "focus-visible:outline-[color:var(--color-primary)]";
 
-  const [isLikeAnimating, setIsLikeAnimating] = useState<boolean>(false);
-  const [isFavAnimating, setIsFavAnimating] = useState<boolean>(false);
-
-  const [, startTransition] = useTransition();
-
-  const handleLikeClick = () => {
-    if (!isLoggedIn) {
-      onRequireLogin?.();
-      return;
-    }
-
-    const nextState = !isLiked;
-    const prevLiked = isLiked;
-    const prevCount = likesCount;
-
-    // 楽観的更新
-    setIsLiked(nextState);
-    setLikesCount((prev) => (nextState ? prev + 1 : prev - 1));
-    setIsLikeAnimating(true);
-    setTimeout(() => setIsLikeAnimating(false), 200);
-
-    startTransition(async () => {
-      try {
-        if (onToggleLike) {
-          await onToggleLike(nextState);
-        }
-      } catch (error) {
-        // 失敗時にロールバック
-        setIsLiked(prevLiked);
-        setLikesCount(prevCount);
-      }
-    });
-  };
-
-  const handleFavoriteClick = () => {
-    if (!isLoggedIn) {
-      onRequireLogin?.();
-      return;
-    }
-
-    const nextState = !isFavorited;
-    const prevFavorited = isFavorited;
-    const prevCount = favoritesCount;
-
-    // 楽観的更新
-    setIsFavorited(nextState);
-    setFavoritesCount((prev) => (nextState ? prev + 1 : prev - 1));
-    setIsFavAnimating(true);
-    setTimeout(() => setIsFavAnimating(false), 200);
-
-    startTransition(async () => {
-      try {
-        if (onToggleFavorite) {
-          await onToggleFavorite(nextState);
-        }
-      } catch (error) {
-        // 失敗時にロールバック
-        setIsFavorited(prevFavorited);
-        setFavoritesCount(prevCount);
-      }
-    });
-  };
+export default function StatActionClient({ notes = [] }: StatActionClientProps) {
+  const { like, favorite } = useTherapistActions();
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-[#E0E0E0]">
-      {/* 左側: 指標表示と補足情報 */}
-      <div className="flex flex-col gap-1">
+    <div className="flex items-center justify-between gap-3 border-b border-[color:var(--color-border)] bg-[var(--color-bg)] px-4 py-3">
+      {/* 左: 指標 + 補足 */}
+      <div className="min-w-0">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <span className="text-[#D93025] text-[18px]" aria-hidden="true">
-              👍
-            </span>
-            <span className="font-bold text-[18px] text-[#222222] tabular-nums">
-              {likesCount.toLocaleString()}
+          <div className="flex items-center gap-1 text-[color:var(--color-accent-like)]">
+            <ThumbsUp size={20} aria-hidden="true" />
+            <span className="text-[18px] font-bold leading-none tabular-nums text-[color:var(--color-text)]">
+              {like.count.toLocaleString()}
             </span>
           </div>
-          <div className="flex items-center gap-1">
-            <span className="text-[#F5A623] text-[18px]" aria-hidden="true">
-              ★
-            </span>
-            <span className="font-bold text-[18px] text-[#222222] tabular-nums">
-              {favoritesCount.toLocaleString()}
+          <div className="flex items-center gap-1 text-[color:var(--color-accent-star)]">
+            <Star size={20} fill="currentColor" aria-hidden="true" />
+            <span className="text-[18px] font-bold leading-none tabular-nums text-[color:var(--color-text)]">
+              {favorite.count.toLocaleString()}
             </span>
           </div>
         </div>
 
-        <div className="text-[13px] leading-[1.6] text-[#888888] flex flex-col">
-          <span>営業時間: 12:00〜翌5:00</span>
-          <span>定休日: 年中無休</span>
-        </div>
+        {notes.length > 0 && (
+          <div className="mt-2 flex flex-col gap-1 text-[13px] leading-[1.6] text-[color:var(--color-text-sub)]">
+            {notes.slice(0, 2).map((note) => (
+              <span key={note}>{note}</span>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* 右側: アクション丸ボタン */}
-      <div className="flex items-center gap-2">
-        {/* いいねボタン */}
+      {/* 右: アクション丸ボタン(状態は aria-pressed で伝えるため、ラベルは固定) */}
+      <div className="flex shrink-0 items-center gap-2">
         <button
           type="button"
-          aria-pressed={isLiked}
-          aria-label={`いいね ${isLiked ? "解除" : "追加"}`}
-          onClick={handleLikeClick}
-          className={`
-            w-[54px] h-[54px] rounded-full bg-white flex items-center justify-center
-            shadow-[0_2px_6px_rgba(0,0,0,0.15)] transition-transform duration-100 active:scale-95
-            focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1B2F8F] focus-visible:outline-offset-2
-            ${isLikeAnimating ? "scale-115" : "scale-100"}
-          `}
+          aria-pressed={like.active}
+          aria-label="いいね"
+          onClick={like.toggle}
+          style={{ boxShadow: "var(--shadow-action)" }}
+          className={`${actionButton} text-[color:var(--color-accent-like)] ${
+            like.bounce ? "scale-[1.15]" : "scale-100"
+          }`}
         >
-          <svg
-            className={`w-[26px] h-[26px] transition-colors duration-200 ${
-              isLiked ? "text-[#D93025] fill-current" : "text-[#D93025] fill-none"
-            }`}
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
-          </svg>
+          <ThumbsUp size={26} fill={like.active ? "currentColor" : "none"} aria-hidden="true" />
         </button>
 
-        {/* お気に入りボタン (デザインシステム規約により★に統一) */}
+        {/* お気に入りは★に統一(designsystem 4.2) */}
         <button
           type="button"
-          aria-pressed={isFavorited}
-          aria-label={`お気に入り ${isFavorited ? "解除" : "追加"}`}
-          onClick={handleFavoriteClick}
-          className={`
-            w-[54px] h-[54px] rounded-full bg-white flex items-center justify-center
-            shadow-[0_2px_6px_rgba(0,0,0,0.15)] transition-transform duration-100 active:scale-95
-            focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1B2F8F] focus-visible:outline-offset-2
-            ${isFavAnimating ? "scale-115" : "scale-100"}
-          `}
+          aria-pressed={favorite.active}
+          aria-label="お気に入り"
+          onClick={favorite.toggle}
+          style={{ boxShadow: "var(--shadow-action)" }}
+          className={`${actionButton} text-[color:var(--color-accent-star)] ${
+            favorite.bounce ? "scale-[1.15]" : "scale-100"
+          }`}
         >
-          <svg
-            className={`w-[26px] h-[26px] transition-colors duration-200 ${
-              isFavorited
-                ? "text-[#F5A623] fill-current"
-                : "text-[#F5A623] fill-none"
-            }`}
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-          </svg>
+          <Star size={26} fill={favorite.active ? "currentColor" : "none"} aria-hidden="true" />
         </button>
       </div>
 
       {/* スクリーンリーダー向けの数値変化通知 */}
       <span className="sr-only" aria-live="polite">
-        {`現在のいいね数: ${likesCount}、お気に入り数: ${favoritesCount}`}
+        {`いいね ${like.count}件、お気に入り ${favorite.count}件`}
       </span>
     </div>
   );
-};
-
-export default StatActionClient;
+}
