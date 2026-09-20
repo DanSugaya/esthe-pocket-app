@@ -31,6 +31,21 @@ type Course = {
   note?: string;
 };
 
+type Review = {
+  id: string;
+  userName: string;
+  rating: number;
+  date: string;
+  comment: string;
+};
+
+type RecommendedShop = {
+  id: string;
+  name: string;
+  image: string;
+  promoText?: string;
+};
+
 type ShopDetail = {
   id: string;
   name: string;
@@ -48,14 +63,18 @@ type ShopDetail = {
   notices: { updatedAt: string; message: string };
   therapists: Therapist[];
   courses: Course[];
+  reviews: {
+    average: number;
+    totalCount: number;
+    items: Review[];
+  };
+  recommendations: RecommendedShop[];
+  sameAreaShops: RecommendedShop[];
   legal: { registrationInfo: string };
 };
 
 /* ============================================================================
  * 2. モックデータ
- *    画像は外部サービスに依存しないよう、SVGのデータURIで生成しています。
- *    本番データに差し替えるときは next.config の images.remotePatterns に
- *    画像ドメインを登録してください。
  * ============================================================================ */
 function placeholder(w: number, h: number, bg: string, label: string, fg = '#FFFFFF'): string {
   const svg =
@@ -102,12 +121,30 @@ const MOCK_SHOP: ShopDetail = {
     { id: 'c2', name: 'ディープリラクゼーション', minutes: 90, price: 16000 },
     { id: 'c3', name: 'プレミアムラグジュアリー', minutes: 120, price: 22000 },
   ],
-  // ダミー文言です。実データでは各店舗の届出内容を確認して入力してください(designsystem.md §12)。
+  reviews: {
+    average: 4.8,
+    totalCount: 128,
+    items: [
+      { id: 'r1', userName: 'ゲストさん', rating: 5, date: '2026/09/18', comment: 'とても丁寧な施術でリラックスできました。また利用したいです！' },
+      { id: 'r2', userName: 'たかさん', rating: 4, date: '2026/09/15', comment: '部屋が清潔で居心地が良かったです。駅からも近くて便利。' },
+      { id: 'r3', userName: 'K.Mさん', rating: 5, date: '2026/09/10', comment: 'カウンセリングがしっかりしていて安心できました。' },
+    ],
+  },
+  recommendations: [
+    { id: 'rec1', name: 'リラクゼーション 恵比寿', image: placeholder(200, 200, '#2A3F9D', 'Rec 1'), promoText: '初回3,000円OFF' },
+    { id: 'rec2', name: 'アロママリン 新宿店', image: placeholder(200, 200, '#3A4FAD', 'Rec 2'), promoText: '極上個室スパ' },
+    { id: 'rec3', name: 'スパ プレシャス六本木', image: placeholder(200, 200, '#4A5FBD', 'Rec 3'), promoText: '深夜営業中' },
+  ],
+  sameAreaShops: [
+    { id: 'sa1', name: '渋谷スパ ラグゼ', image: placeholder(200, 200, '#2A5D9D', 'Area 1'), promoText: '渋谷駅徒歩1分' },
+    { id: 'sa2', name: 'ヒーリングサロン 道玄坂', image: placeholder(200, 200, '#3A6DAD', 'Area 2'), promoText: '新人セラピスト多数' },
+    { id: 'sa3', name: 'アロマアベニュー 渋谷', image: placeholder(200, 200, '#4A7DBD', 'Area 3'), promoText: '全員有資格者' },
+  ],
   legal: { registrationInfo: '届出状況: 確認済み(ダミーデータ)' },
 };
 
 /* ============================================================================
- * 3. アイコン (外部ライブラリ不要のインラインSVG / Lucide互換のアウトライン)
+ * 3. アイコン (インラインSVG / Lucide互換)
  * ============================================================================ */
 const ICON_PATHS = {
   back: <path d="m15 18-6-6 6-6" />,
@@ -159,6 +196,7 @@ const ICON_PATHS = {
       <circle cx="12" cy="7" r="4" />
     </>
   ),
+  arrowUp: <polyline points="18 15 12 9 6 15" />,
 };
 
 type IconName = keyof typeof ICON_PATHS;
@@ -189,13 +227,8 @@ function Icon({
 }
 
 /* ============================================================================
- * 4. フック
+ * 4. フック (IntersectionObserver)
  * ============================================================================ */
-
-/**
- * 要素が「画面の上へスクロールアウトしたか」を IntersectionObserver で監視する。
- * (designsystem.md §13: scrollイベントの直接監視は避ける)
- */
 function useScrolledPast<T extends HTMLElement>(topOffset = 56) {
   const ref = useRef<T | null>(null);
   const [passed, setPassed] = useState(false);
@@ -241,7 +274,7 @@ function DetailAppBar({ shopName, solid }: { shopName: string; solid: boolean })
       setToast('URLをコピーしました');
       window.setTimeout(() => setToast(null), 2000);
     } catch {
-      // シェアのキャンセルなどは無視する
+      // シェアキャンセルのエラー無視
     }
   };
 
@@ -274,7 +307,7 @@ function DetailAppBar({ shopName, solid }: { shopName: string; solid: boolean })
       {toast && (
         <div
           role="status"
-          className="fixed top-[64px] left-1/2 -translate-x-1/2 z-[110] bg-[rgba(18,32,106,0.9)] text-white text-[12px] px-4 py-2 rounded-full"
+          className="fixed top-[64px] left-1/2 -translate-x-1/2 z-[110] bg-[rgba(18,32,106,0.9)] text-white text-[12px] px-4 py-2 rounded-full shadow-md"
         >
           {toast}
         </div>
@@ -283,7 +316,7 @@ function DetailAppBar({ shopName, solid }: { shopName: string; solid: boolean })
   );
 }
 
-// 4.8 Hero Carousel (16:9 / 自動送りなし / スワイプ + ドット)
+// 4.8 Hero Carousel
 function HeroCarousel({ images }: { images: ShopDetail['heroImages'] }) {
   const [index, setIndex] = useState(0);
 
@@ -351,7 +384,7 @@ function StatusCircle({ status, nextSlot }: { status: TherapistStatus; nextSlot?
 // 4.18 List Row (セラピスト行)
 function TherapistRow({ therapist }: { therapist: Therapist }) {
   return (
-    <div className="flex items-center h-[104px] py-2 border-b border-[#E0E0E0] gap-3">
+    <div className="flex items-center h-[104px] py-2 border-b border-[#E0E0E0] gap-3 px-2">
       <div className="relative w-[72px] aspect-[3/4] rounded-[4px] overflow-hidden border border-[#E0E0E0] shrink-0">
         <Image
           src={therapist.image}
@@ -432,6 +465,28 @@ function OutlineButton({ children }: { children: ReactNode }) {
   );
 }
 
+// 4.21 Recommend Row
+function RecommendRow({ title, items }: { title: string; items: RecommendedShop[] }) {
+  return (
+    <section className="py-4">
+      <h2 className="text-[17px] font-bold px-4 mb-3">{title}</h2>
+      <div className="flex overflow-x-auto gap-[10px] px-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {items.map((item) => (
+          <div key={item.id} className="w-[134px] shrink-0 snap-start">
+            <div className="relative w-[134px] h-[134px] rounded-[12px] overflow-hidden border border-[#E0E0E0]">
+              <Image src={item.image} alt={item.name} fill sizes="134px" className="object-cover" unoptimized />
+            </div>
+            <div className="text-[14px] font-bold mt-2 truncate">{item.name}</div>
+            {item.promoText && (
+              <div className="text-[12px] font-bold text-[#E0407F] truncate mt-0.5">{item.promoText}</div>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 const STATUS_RANK: Record<TherapistStatus, number> = { available: 0, working: 1, full: 2, off: 3 };
 
 const TABS: { href: string; label: string; icon: IconName }[] = [
@@ -446,26 +501,37 @@ const formatYen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
 
 /* ============================================================================
  * 6. メインページ (店舗詳細)
- *    どんな [id] でも MOCK_SHOP を表示します。
- *    例) /shops/precious-shibuya  /shops/1
  * ============================================================================ */
 export default function ShopDetailPage() {
   const shop = MOCK_SHOP;
 
   const [heroRef, heroPassed] = useScrolledPast<HTMLDivElement>(56);
   const [ctaRef, ctaPassed] = useScrolledPast<HTMLAnchorElement>(56);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const [liked, setLiked] = useState(false);
   const [faved, setFaved] = useState(false);
   const likes = shop.stats.likes + (liked ? 1 : 0);
   const favorites = shop.stats.favorites + (faved ? 1 : 0);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) setShowScrollTop(true);
+      else setShowScrollTop(false);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const sortedTherapists = [...shop.therapists].sort(
     (a, b) => STATUS_RANK[a.status] - STATUS_RANK[b.status] || Number(!!b.isNew) - Number(!!a.isNew),
   );
   const workingCount = shop.therapists.filter((t) => t.status !== 'off').length;
 
-  // Sticky CTA 表示中は FAB を 56px 上にずらす
   const fabBottom = ctaPassed
     ? 'calc(64px + 56px + 16px + env(safe-area-inset-bottom))'
     : 'calc(64px + 16px + env(safe-area-inset-bottom))';
@@ -476,7 +542,7 @@ export default function ShopDetailPage() {
       <DetailAppBar shopName={shop.name} solid={heroPassed} />
 
       {/* 6.3 #1 ヒーロー */}
-      <div ref={heroRef}>
+      <div ref={heroRef} className="w-full">
         <HeroCarousel images={shop.heroImages} />
       </div>
 
@@ -584,7 +650,7 @@ export default function ShopDetailPage() {
         </div>
       </div>
 
-      {/* 強区切り(主役コンテンツの開始) */}
+      {/* 強区切り (4px 太線) */}
       <div className="h-1 bg-[#1B2F8F]" />
 
       {/* 6.3 #7 セラピスト一覧 */}
@@ -594,7 +660,7 @@ export default function ShopDetailPage() {
           <span className="text-[13px] text-[#666666] ml-2">本日出勤{workingCount}名</span>
         </div>
 
-        <div className="px-2">
+        <div>
           {sortedTherapists.slice(0, 4).map((t) => (
             <TherapistRow key={t.id} therapist={t} />
           ))}
@@ -605,7 +671,7 @@ export default function ShopDetailPage() {
         </div>
       </section>
 
-      {/* 中区切り */}
+      {/* 中区切り (2px グレー) */}
       <div className="border-b-2 border-[#DADADA]" />
 
       {/* 4.24 Price Table */}
@@ -639,6 +705,37 @@ export default function ShopDetailPage() {
         <p className="text-[11px] text-[#666666] mt-2">
           ※表示価格はすべて税込です。本指名料は別途かかります。
         </p>
+      </section>
+
+      {/* 中区切り */}
+      <div className="border-b-2 border-[#DADADA]" />
+
+      {/* 6.3 #9 口コミ */}
+      <section className="p-4" id="review-section">
+        <div className="flex justify-between items-baseline mb-3">
+          <h2 className="text-[17px] font-bold">口コミ</h2>
+          <div className="flex items-center gap-1 font-bold text-[14px]">
+            <Icon name="star" className="w-4 h-4 text-[#F5A623]" filled />
+            <span>{shop.reviews.average}</span>
+            <span className="text-[#666666] font-normal text-[12px]">({shop.reviews.totalCount}件)</span>
+          </div>
+        </div>
+        <div className="space-y-3">
+          {shop.reviews.items.map((review) => (
+            <div key={review.id} className="border-b border-[#E0E0E0] pb-3">
+              <div className="flex justify-between items-center text-[12px] text-[#666666]">
+                <span className="font-bold text-[#222222]">{review.userName}</span>
+                <span>{review.date}</span>
+              </div>
+              <div className="flex text-[#F5A623] my-1">
+                {[...Array(5)].map((_, i) => (
+                  <Icon key={i} name="star" className="w-3.5 h-3.5" filled={i < review.rating} />
+                ))}
+              </div>
+              <p className="text-[13px] leading-relaxed">{review.comment}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* 中区切り */}
@@ -690,6 +787,18 @@ export default function ShopDetailPage() {
         </table>
       </section>
 
+      {/* 中区切り */}
+      <div className="border-b-2 border-[#DADADA]" />
+
+      {/* 4.21 Recommend Row (おすすめ) */}
+      <RecommendRow title="この店舗を見た人はこちらも" items={shop.recommendations} />
+
+      {/* 中区切り */}
+      <div className="border-b-2 border-[#DADADA]" />
+
+      {/* 4.21 Recommend Row (同エリア) */}
+      <RecommendRow title="同じエリアの店舗" items={shop.sameAreaShops} />
+
       {/* 4.11 Footer */}
       <footer className="bg-[#12206A] text-white p-6 mt-6">
         <div className="grid grid-cols-2 gap-2 mb-6">
@@ -708,7 +817,20 @@ export default function ShopDetailPage() {
         </p>
       </footer>
 
-      {/* 4.22 Coupon FAB (右端に貼り付き) */}
+      {/* トップへ戻る FAB (4.9) */}
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          aria-label="トップへ戻る"
+          className="fixed left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-[rgba(18,32,106,0.85)] text-white shadow-lg flex items-center justify-center z-[85] transition-opacity"
+          style={{ bottom: fabBottom }}
+        >
+          <Icon name="arrowUp" className="w-6 h-6" />
+        </button>
+      )}
+
+      {/* 4.22 Coupon FAB */}
       <div
         className="fixed left-1/2 -translate-x-1/2 w-full max-w-[720px] h-0 pointer-events-none z-[80]"
         style={{ bottom: fabBottom }}
@@ -724,7 +846,7 @@ export default function ShopDetailPage() {
         </button>
       </div>
 
-      {/* 4.20 Sticky CTA (主CTAが画面外に出たら表示) */}
+      {/* 4.20 Sticky CTA */}
       {ctaPassed && (
         <StickyCtaBar tel={shop.tel} faved={faved} onToggleFav={() => setFaved((v) => !v)} />
       )}
