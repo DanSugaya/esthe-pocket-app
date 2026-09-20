@@ -91,7 +91,7 @@ export default function MyPage() {
   // 疑似ユーザーデータ (実際にはセッションやAPIから取得)
   const user = {
     isLoggedIn: true,
-    name: "菅谷 弾",
+    name: "XX OOO",
     rank: "ゴールド会員",
     points: "1,250",
     couponsCount: "3",
