@@ -3,18 +3,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-// クライアントコンポーネントのインポート
 import DetailAppBarClient from './DetailAppBarClient';
 import StatActionClient from './StatActionClient';
 import StickyCtaClient from './StickyCtaClient';
 
-// 型定義
 type TherapistDetail = {
   id: string;
   name: string;
   kanaName?: string;
   shopId: string;
   shopName: string;
+  tel: string;
   images: { src: string; alt: string }[];
   status: 'available' | 'working' | 'off';
   todayHours?: string;
@@ -55,7 +54,6 @@ type TherapistDetail = {
   }[];
 };
 
-// ダミーデータ取得関数 (実装時は API / DB 呼び出しに置き換え)
 async function getTherapist(id: string): Promise<TherapistDetail | null> {
   if (id === 'not-found') return null;
 
@@ -65,6 +63,7 @@ async function getTherapist(id: string): Promise<TherapistDetail | null> {
     kanaName: 'あいざわ みなみ',
     shopId: 'shop-001',
     shopName: 'アロマプレミアム 渋谷店',
+    tel: '0300000000',
     images: [
       { src: '/images/therapists/sample1.jpg', alt: '愛沢みなみ メイン写真' },
       { src: '/images/therapists/sample2.jpg', alt: '愛沢みなみ サブ写真1' },
@@ -121,32 +120,44 @@ async function getTherapist(id: string): Promise<TherapistDetail | null> {
     otherTherapists: [
       { id: 'th-02', name: '白石 つばさ', image: '/images/therapists/sample3.jpg', statusText: '本日出勤中' },
       { id: 'th-03', name: '七瀬 あおい', image: '/images/therapists/sample4.jpg', statusText: '18時〜空きあり' },
-      { id: 'th-04', name: '桐谷 遥', image: '/images/therapists/sample5.jpg', statusText: '明月出勤' },
+      { id: 'th-04', name: '桐谷 遥', image: '/images/therapists/sample5.jpg', statusText: '明日出勤' },
     ],
   };
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const therapist = await getTherapist(params.id);
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const therapist = await getTherapist(id);
   if (!therapist) return { title: 'セラピストが見つかりません' };
 
   return {
     title: `${therapist.name}（${therapist.shopName}）| メンズエステポータル`,
-    description: `${therapist.shopName}所属のセラピスト「${therapist.name}」のプロフィール、出勤スケジュール、口コミ評価情報です。`,
+    description: `${therapist.shopName}所属のセラピスト「${therapist.name}」のプロフィール情報です。`,
   };
 }
 
-export default async function TherapistDetailPage({ params }: { params: { id: string } }) {
-  const therapist = await getTherapist(params.id);
+export default async function TherapistDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const therapist = await getTherapist(id);
 
   if (!therapist) {
     notFound();
   }
 
-  // スペック文字列の生成
   const specParts = [];
   if (therapist.specs.height) specParts.push(`T${therapist.specs.height}`);
-  if (therapist.specs.bust) specParts.push(`B${therapist.specs.bust}${therapist.specs.cup ? `(${therapist.specs.cup})` : ''}`);
+  if (therapist.specs.bust)
+    specParts.push(
+      `B${therapist.specs.bust}${therapist.specs.cup ? `(${therapist.specs.cup})` : ''}`
+    );
   if (therapist.specs.waist) specParts.push(`W${therapist.specs.waist}`);
   if (therapist.specs.hip) specParts.push(`H${therapist.specs.hip}`);
   const specText = specParts.join(' / ');
@@ -156,15 +167,13 @@ export default async function TherapistDetailPage({ params }: { params: { id: st
       {/* 4.13 Detail App Bar (スクロール固定・背景連動) */}
       <DetailAppBarClient title={`${therapist.shopName} / ${therapist.name}`} />
 
-      {/* PC版(lg: 1024px) 2カラムレイアウトコンテナ */}
+      {/* PC版 2カラムレイアウトコンテナ */}
       <div className="max-w-[1024px] mx-auto lg:px-4 lg:pt-4 lg:flex lg:gap-8">
-        
-        {/* 【メインカラム】(スマホ時 100% / PC時 幅 68%) */}
+        {/* メインカラム */}
         <main className="lg:w-[68%] flex-1">
-          
           {/* 4.25 Profile Header Block */}
           <section className="relative">
-            {/* メイン写真 (比率 3:4) */}
+            {/* メイン写真 */}
             <div className="relative w-full aspect-[3/4] bg-[var(--color-bg-sub)]">
               <Image
                 src={therapist.images[0].src}
@@ -176,9 +185,8 @@ export default async function TherapistDetailPage({ params }: { params: { id: st
               />
             </div>
 
-            {/* プロフィール基本情報 */}
+            {/* 基本情報 */}
             <div className="p-4 bg-[var(--color-bg)]">
-              {/* 出勤状況バッジ (4.19拡張) */}
               {therapist.todayHours && (
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-pill)] bg-[var(--color-primary-light)] text-[var(--color-primary)] text-[12px] font-bold mb-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-success)] animate-pulse" />
@@ -186,7 +194,6 @@ export default async function TherapistDetailPage({ params }: { params: { id: st
                 </div>
               )}
 
-              {/* 名前表記 */}
               <h1 className="text-[20px] font-bold text-[var(--color-primary)] leading-tight">
                 {therapist.name}
                 {therapist.kanaName && (
@@ -196,7 +203,6 @@ export default async function TherapistDetailPage({ params }: { params: { id: st
                 )}
               </h1>
 
-              {/* 所属店舗リンク */}
               <div className="mt-1">
                 <Link
                   href={`/shops/${therapist.shopId}`}
@@ -207,7 +213,6 @@ export default async function TherapistDetailPage({ params }: { params: { id: st
                 </Link>
               </div>
 
-              {/* スペック表記 */}
               {specText && (
                 <p className="mt-2 text-[13px] text-[var(--color-text-sub)] tracking-wide">
                   {specText}
@@ -216,10 +221,10 @@ export default async function TherapistDetailPage({ params }: { params: { id: st
             </div>
           </section>
 
-          {/* 4.9 Primary Large Button (スマホ用主CTA) */}
+          {/* モバイル用主CTA */}
           <section className="px-4 py-2 lg:hidden">
             <a
-              href={`tel:0000000000`}
+              href={`tel:${therapist.tel}`}
               className="w-full h-[var(--btn-h-lg)] bg-[var(--color-primary)] text-white text-[16px] font-bold rounded-[var(--radius-md)] flex items-center justify-center gap-2 shadow-md active:bg-[var(--color-primary-dark)] transition-colors"
             >
               <span>このセラピストを指名して電話予約</span>
@@ -229,28 +234,35 @@ export default async function TherapistDetailPage({ params }: { params: { id: st
           {/* 4.15 Stat & Action Row */}
           <section className="px-4 py-3 border-b border-[var(--color-border)]">
             <StatActionClient
-              nominations={therapist.stats.nominations}
-              likes={therapist.stats.likes}
-              favorites={therapist.stats.favorites}
+              initialLikes={therapist.stats.likes}
+              initialFavorites={therapist.stats.favorites}
             />
           </section>
 
           {/* 自己紹介 & 店舗コメント */}
           <section className="p-4 space-y-4">
             <div>
-              <h2 className="text-[14px] font-bold text-[var(--color-text-sub)] mb-1.5">セラピストメッセージ</h2>
-              <p className="text-[13px] leading-[1.6] whitespace-pre-wrap">{therapist.introText}</p>
+              <h2 className="text-[14px] font-bold text-[var(--color-text-sub)] mb-1.5">
+                セラピストメッセージ
+              </h2>
+              <p className="text-[13px] leading-[1.6] whitespace-pre-wrap">
+                {therapist.introText}
+              </p>
             </div>
 
             {therapist.shopComment && (
               <div className="p-3 bg-[var(--color-bg-sub)] rounded-[var(--radius-md)] border border-[var(--color-border)]">
-                <h3 className="text-[12px] font-bold text-[var(--color-primary)] mb-1">店舗からのコメント</h3>
-                <p className="text-[12px] leading-[1.5] text-[var(--color-text)]">{therapist.shopComment}</p>
+                <h3 className="text-[12px] font-bold text-[var(--color-primary)] mb-1">
+                  店舗からのコメント
+                </h3>
+                <p className="text-[12px] leading-[1.5] text-[var(--color-text)]">
+                  {therapist.shopComment}
+                </p>
               </div>
             )}
           </section>
 
-          {/* 4.17 Outline Chip (特徴タグ) */}
+          {/* 特徴タグ */}
           {therapist.tags.length > 0 && (
             <section className="px-4 pb-4 flex flex-wrap gap-2">
               {therapist.tags.map((tag, idx) => (
@@ -268,10 +280,9 @@ export default async function TherapistDetailPage({ params }: { params: { id: st
             </section>
           )}
 
-          {/* 太線区切り（強: 4px primary） */}
           <div className="h-[4px] bg-[var(--color-primary)] w-full my-2" />
 
-          {/* 4.26 Schedule Calendar Grid (出勤スケジュール) */}
+          {/* スケジュール */}
           <section className="p-4">
             <h2 className="text-[17px] font-bold mb-3">出勤スケジュール</h2>
             <div className="grid grid-cols-7 gap-1 text-center text-[12px]">
@@ -291,28 +302,36 @@ export default async function TherapistDetailPage({ params }: { params: { id: st
                   </span>
                   {sched.status === 'working' ? (
                     <div className="my-auto">
-                      <span className="block text-[var(--color-primary)] text-[10px] font-bold">出勤</span>
-                      <span className="block text-[10px] leading-tight">{sched.timeSlot}</span>
+                      <span className="block text-[var(--color-primary)] text-[10px] font-bold">
+                        出勤
+                      </span>
+                      <span className="block text-[10px] leading-tight">
+                        {sched.timeSlot}
+                      </span>
                     </div>
                   ) : sched.status === 'off' ? (
                     <span className="my-auto text-[11px]">休み</span>
                   ) : (
-                    <span className="my-auto text-[11px] text-[var(--color-text-sub)]">未定</span>
+                    <span className="my-auto text-[11px] text-[var(--color-text-sub)]">
+                      未定
+                    </span>
                   )}
                 </div>
               ))}
             </div>
           </section>
 
-          {/* 中区切り (--border-section: 2px) */}
           <div className="border-t-2 border-[var(--color-divider-strong)] my-2" />
 
-          {/* 4.27 Voice / Review Card (口コミ・評価) */}
+          {/* 口コミ */}
           <section className="p-4">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-[17px] font-bold">口コミ・評価</h2>
               <span className="text-[14px] font-bold text-[var(--color-accent-star)] flex items-center gap-1">
-                ★ 5.0 <span className="text-[12px] text-[var(--color-text-sub)] font-normal">({therapist.reviews.length}件)</span>
+                ★ 5.0{' '}
+                <span className="text-[12px] text-[var(--color-text-sub)] font-normal">
+                  ({therapist.reviews.length}件)
+                </span>
               </span>
             </div>
 
@@ -328,19 +347,24 @@ export default async function TherapistDetailPage({ params }: { params: { id: st
                     </span>
                     <span className="text-[var(--color-text-sub)]">{rev.date}</span>
                   </div>
-                  <div className="text-[11px] text-[var(--color-text-sub)] mb-1.5">投稿者: {rev.author}</div>
-                  <p className="line-clamp-3 leading-[1.5] text-[var(--color-text)]">{rev.content}</p>
+                  <div className="text-[11px] text-[var(--color-text-sub)] mb-1.5">
+                    投稿者: {rev.author}
+                  </div>
+                  <p className="line-clamp-3 leading-[1.5] text-[var(--color-text)]">
+                    {rev.content}
+                  </p>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* 中区切り (--border-section: 2px) */}
           <div className="border-t-2 border-[var(--color-divider-strong)] my-2" />
 
-          {/* 4.21 Recommend Row (この店舗の他のセラピスト) */}
+          {/* 関連セラピスト */}
           <section className="py-4">
-            <h2 className="text-[17px] font-bold px-4 mb-3">この店舗の他のセラピスト</h2>
+            <h2 className="text-[17px] font-bold px-4 mb-3">
+              この店舗の他のセラピスト
+            </h2>
             <div className="flex gap-2.5 overflow-x-auto px-4 snap-x snap-mandatory scrollbar-none">
               {therapist.otherTherapists.map((other) => (
                 <Link
@@ -369,19 +393,22 @@ export default async function TherapistDetailPage({ params }: { params: { id: st
           </section>
         </main>
 
-        {/* 【PC版 サイド追従カラム】(PC時のみ表示 幅 32%) */}
+        {/* PC版 サイド追従 */}
         <aside className="hidden lg:block lg:w-[32%]">
           <div className="sticky top-[72px] p-4 border border-[var(--color-border)] rounded-[var(--radius-lg)] bg-white space-y-4 shadow-sm">
             <div>
               <div className="text-[12px] text-[var(--color-text-sub)]">所属店舗</div>
-              <Link href={`/shops/${therapist.shopId}`} className="text-[16px] font-bold text-[var(--color-primary)] hover:underline">
+              <Link
+                href={`/shops/${therapist.shopId}`}
+                className="text-[16px] font-bold text-[var(--color-primary)] hover:underline"
+              >
                 {therapist.shopName}
               </Link>
             </div>
 
             <div className="border-t border-[var(--color-border)] pt-3">
               <a
-                href={`tel:0000000000`}
+                href={`tel:${therapist.tel}`}
                 className="w-full h-[var(--btn-h-lg)] bg-[var(--color-primary)] text-white text-[16px] font-bold rounded-[var(--radius-md)] flex items-center justify-center gap-2 shadow hover:bg-[var(--color-primary-dark)] transition-colors"
               >
                 <span>このセラピストを指名して電話予約</span>
@@ -389,15 +416,25 @@ export default async function TherapistDetailPage({ params }: { params: { id: st
             </div>
 
             <div className="text-[12px] text-[var(--color-text-sub)] space-y-1 bg-[var(--color-bg-sub)] p-3 rounded-[var(--radius-md)]">
-              <div>本日の出勤: <span className="font-bold text-[var(--color-text)]">{therapist.todayHours || '休み'}</span></div>
-              <div>指名料: <span className="font-bold text-[var(--color-text)]">店舗にてご確認ください</span></div>
+              <div>
+                本日の出勤:{' '}
+                <span className="font-bold text-[var(--color-text)]">
+                  {therapist.todayHours || '休み'}
+                </span>
+              </div>
+              <div>
+                指名料:{' '}
+                <span className="font-bold text-[var(--color-text)]">
+                  店舗にてご確認ください
+                </span>
+              </div>
             </div>
           </div>
         </aside>
       </div>
 
-      {/* 4.20 Sticky CTA Bar (モバイル用画面下部追従) */}
-      <StickyCtaClient therapistName={therapist.name} />
+      {/* モバイル用追従CTA */}
+      <StickyCtaClient tel={therapist.tel} />
     </div>
   );
 }

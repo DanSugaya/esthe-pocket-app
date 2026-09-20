@@ -1,39 +1,39 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ChevronLeft, Share2 } from "lucide-react";
 
 interface DetailAppBarClientProps {
-  shopName: string;
-  sentinelRef: React.RefObject<HTMLDivElement>;
+  title: string;
+  sentinelRef?: React.RefObject<HTMLDivElement | null>;
   onBack?: () => void;
 }
 
 export const DetailAppBarClient: React.FC<DetailAppBarClientProps> = ({
-  shopName,
+  title,
   sentinelRef,
   onBack,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const fallbackRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const sentinelEl = sentinelRef.current;
-    if (!sentinelEl) return;
+    const targetEl = sentinelRef?.current || fallbackRef.current;
+    if (!targetEl) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // 番兵要素が画面外（上部）に消えたらヘッダー背景を有効化
         setIsScrolled(!entry.isIntersecting);
       },
       {
         root: null,
-        rootMargin: "-56px 0px 0px 0px", // ヘッダー高さ(56px)分ずらして判定
+        rootMargin: "-56px 0px 0px 0px",
         threshold: 0,
       }
     );
 
-    observer.observe(sentinelEl);
+    observer.observe(targetEl);
 
     return () => {
       observer.disconnect();
@@ -50,18 +50,17 @@ export const DetailAppBarClient: React.FC<DetailAppBarClientProps> = ({
 
   const handleShare = async () => {
     const shareData = {
-      title: shopName,
+      title,
       url: typeof window !== "undefined" ? window.location.href : "",
     };
 
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch (err) {
-        // ユーザーキャンセルなどの例外ハンドリング（必要に応じて拡張）
+      } catch {
+        // キャンセル処理
       }
     } else {
-      // フォールバック: URLコピー
       try {
         await navigator.clipboard.writeText(shareData.url);
         setShowToast(true);
@@ -75,7 +74,7 @@ export const DetailAppBarClient: React.FC<DetailAppBarClientProps> = ({
   return (
     <>
       <header
-        aria-label="店舗ヘッダー"
+        aria-label="ヘッダー"
         style={{
           position: "fixed",
           top: 0,
@@ -92,7 +91,6 @@ export const DetailAppBarClient: React.FC<DetailAppBarClientProps> = ({
           transition: "background-color 150ms ease",
         }}
       >
-        {/* 戻るボタン */}
         <button
           type="button"
           onClick={handleBack}
@@ -114,7 +112,6 @@ export const DetailAppBarClient: React.FC<DetailAppBarClientProps> = ({
           <ChevronLeft size={24} aria-hidden="true" />
         </button>
 
-        {/* 店舗名 (スクロール時のみフェードイン表示) */}
         <div
           style={{
             flex: 1,
@@ -132,14 +129,13 @@ export const DetailAppBarClient: React.FC<DetailAppBarClientProps> = ({
             fontWeight: 700,
           }}
         >
-          {shopName}
+          {title}
         </div>
 
-        {/* シェアボタン */}
         <button
           type="button"
           onClick={handleShare}
-          aria-label="この店舗情報をシェア"
+          aria-label="情報をシェア"
           style={{
             width: "40px",
             height: "40px",
@@ -158,7 +154,6 @@ export const DetailAppBarClient: React.FC<DetailAppBarClientProps> = ({
         </button>
       </header>
 
-      {/* URLコピー時のトースト通知 */}
       {showToast && (
         <div
           role="status"
@@ -185,3 +180,5 @@ export const DetailAppBarClient: React.FC<DetailAppBarClientProps> = ({
     </>
   );
 };
+
+export default DetailAppBarClient;
