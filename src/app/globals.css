@@ -1,14 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  /* 既存の変数 */
-  --background: #ffffff;
-  --foreground: #171717;
-
   /* ==========================================
-     デザインシステム (エステポケット) トークン
+     デザインシステム (エステポケット) トークン  v1.1
      ========================================== */
-  /* カラー定義 */
+  /* カラー */
   --color-primary: #1B2F8F;
   --color-primary-dark: #12206A;
   --color-primary-light: #E8ECFA;
@@ -19,10 +15,19 @@
   --color-success: #2E9E5B;
   --color-text: #222222;
   --color-text-sub: #888888;
+  /* 12px以下の重要な補足用(§10: #888 は白背景で約3.5:1のため #666 以上を使う) */
+  --color-text-caption: #666666;
   --color-border: #E0E0E0;
+  --color-divider-strong: #DADADA;
   --color-bg: #FFFFFF;
   --color-bg-sub: #F4F4F4;
   --color-overlay: rgba(18, 32, 106, 0.85);
+  --color-scrim: rgba(0, 0, 0, 0.35);
+
+  /* ランクバッジ(1〜3位)。上に置く文字は --color-text */
+  --color-rank-gold: #F5A623;
+  --color-rank-silver: #C0C0C0;
+  --color-rank-bronze: #CD7F32;
 
   /* スペーシング (4pxグリッド) */
   --space-1: 4px;
@@ -37,20 +42,32 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-pill: 999px;
+  --radius-circle: 50%;
+
+  /* 境界線・影 */
+  --border-outline: 2px solid var(--color-primary);
+  --border-section: 2px solid var(--color-divider-strong);
+  --shadow-float: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-action: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+  /* サイズ */
+  --size-action: 54px;
+  --size-status: 52px;
+  --btn-h-lg: 52px;
 
   /* レイアウト固定値 */
   --header-h: 56px;
   --tabbar-h: 64px;
+  --sticky-cta-h: 56px;
+  /* セーフエリア込みの実寸(viewport-fit=cover 前提) */
+  --header-total: calc(var(--header-h) + env(safe-area-inset-top));
+  --tabbar-total: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
 }
 
-/* Tailwind CSS v4 用のカスタムテーマ拡張 */
+/* Tailwind CSS v4: クラスとして使うためのテーマ登録 */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-noto-sans-jp), "Hiragino Kaku Gothic ProN", "Yu Gothic", system-ui, sans-serif;
 
-  /* エステポケット用カラーをTailwindクラスで使えるように登録 */
   --color-esthe-primary: var(--color-primary);
   --color-esthe-primary-dark: var(--color-primary-dark);
   --color-esthe-primary-light: var(--color-primary-light);
@@ -62,16 +79,19 @@
   --color-esthe-sub: var(--color-bg-sub);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* 横スクロール行のスクロールバー非表示(Tailwind v4 標準には無いため自前定義) */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
 
+/* ダークモードはデザインシステムに未定義。
+   白背景のコンポーネントに淡色文字が乗って読めなくなるため、配色は常にライト固定にする */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-noto-sans-jp), "Hiragino Kaku Gothic ProN", "Yu Gothic", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }

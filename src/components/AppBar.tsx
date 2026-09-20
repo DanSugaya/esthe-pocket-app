@@ -1,26 +1,26 @@
-'use client';
-
-import React from 'react';
 import Link from 'next/link';
 
+// 4.1 App Bar。ステータスバー領域(safe-area-inset-top)も同色で塗る。
+// ロゴは見出しではないため h1 にしない(ページ側の h1 と重複させない)。
 export function AppBar() {
   return (
-    <header className="fixed top-0 left-0 right-0 max-w-[720px] mx-auto h-[56px] bg-[var(--color-primary)] text-white flex items-center justify-between px-4 z-20 shadow-sm select-none">
-      {/* 左側ダミー（ロゴを中央に配置するためのスペース） */}
-      <div className="w-[44px] h-[44px]" aria-hidden="true" />
+    <header className="fixed inset-x-0 top-0 z-40 mx-auto flex h-[var(--header-total)] max-w-[720px] select-none items-center justify-between bg-[var(--color-primary)] px-4 pt-[env(safe-area-inset-top)] text-white">
+      {/* 左側ダミー(ロゴを中央に配置するためのスペース) */}
+      <div className="h-[44px] w-[44px]" aria-hidden="true" />
 
-      {/* 中央：ロゴ / サイト名 */}
-      <h1 className="font-bold text-[18px] tracking-wide text-white truncate">
-        <Link href="/" className="hover:opacity-90 transition-opacity">
-          エステポケット
-        </Link>
-      </h1>
+      {/* 中央:ロゴ / サイト名 */}
+      <Link
+        href="/"
+        className="truncate rounded text-[18px] font-bold tracking-wide text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+      >
+        エステポケット
+      </Link>
 
-      {/* 右側：検索アイコン (タップ領域 44x44px) */}
+      {/* 右側:検索アイコン(タップ領域 44x44px) */}
       <Link
         href="/search"
         aria-label="検索"
-        className="w-[44px] h-[44px] flex items-center justify-center -mr-2 hover:opacity-80 active:opacity-60 transition-opacity rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        className="-mr-2 flex h-[44px] w-[44px] items-center justify-center rounded-full transition-opacity hover:opacity-80 active:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -28,7 +28,7 @@ export function AppBar() {
           viewBox="0 0 24 24"
           strokeWidth={1.75}
           stroke="currentColor"
-          className="w-6 h-6"
+          className="h-6 w-6"
           aria-hidden="true"
         >
           <path
@@ -42,5 +42,4 @@ export function AppBar() {
   );
 }
 
-// Named export と Default export の両方を公開（ビルドエラー防止）
 export default AppBar;
