@@ -1,46 +1,43 @@
-import Link from "next/link";
-import { ChevronRight, History, Settings, Ticket, User } from "lucide-react";
-import { AppBar } from "@/components/AppBar";
-import { SectionHeader } from "@/components/SectionHeader";
-import { TabBar } from "@/components/TabBar";
+import Link from 'next/link';
+import { ChevronRight, History, Settings, Ticket, User, type LucideIcon } from 'lucide-react';
+import { AppBar } from '@/components/AppBar';
+import { Divider } from '@/components/Divider';
 
-const menu = [
-  { label: "プロフィール", href: "#", icon: User },
-  { label: "閲覧履歴", href: "#", icon: History },
-  { label: "クーポン", href: "#", icon: Ticket },
-  { label: "設定", href: "#", icon: Settings },
+// TODO: 遷移先ページができたら href を差し替える
+const MENU: { label: string; href: string; Icon: LucideIcon }[] = [
+  { label: 'プロフィール', href: '#', Icon: User },
+  { label: '閲覧履歴', href: '#', Icon: History },
+  { label: 'クーポン', href: '#', Icon: Ticket },
+  { label: '設定', href: '#', Icon: Settings },
 ];
 
 export default function MyPage() {
   return (
-    <div className="min-h-screen pb-[calc(var(--tabbar-total)+16px)]">
-      <AppBar />
-      <main className="mx-auto max-w-[720px]">
-        <SectionHeader title="マイページ" />
+    <>
+      <AppBar title="マイページ" />
+
+      <main>
         <section className="p-4">
-          <div className="rounded-[var(--radius-lg)] bg-[var(--color-bg-sub)] p-4">
-            <div className="text-[17px] font-bold">ゲストさん</div>
-            <p className="mt-1 text-[12px] text-[var(--color-text-caption)]">
-              会員登録するとお気に入りや履歴を保存できます。
-            </p>
+          <div className="rounded-esthe-lg bg-esthe-sub p-4">
+            <p className="text-h2 font-bold">ゲストさん</p>
+            <p className="mt-1 text-caption text-esthe-caption">会員登録するとお気に入りや履歴を保存できます。</p>
           </div>
         </section>
-        <div className="border-t-4 border-[var(--color-primary)]">
-          {menu.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link key={item.label} href={item.href} className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-4">
-                <span className="flex items-center gap-3 text-[14px] font-bold">
-                  <Icon size={22} className="text-[var(--color-primary)]" />
-                  {item.label}
-                </span>
-                <ChevronRight size={20} className="text-[var(--color-text-sub)]" />
+
+        <Divider level="strong" />
+
+        <ul>
+          {MENU.map(({ label, href, Icon }) => (
+            <li key={label}>
+              <Link href={href} className="press flex items-center gap-3 border-b border-esthe-border px-4 py-4">
+                <Icon size={22} aria-hidden="true" className="text-esthe-primary" />
+                <span className="flex-1 text-title font-bold">{label}</span>
+                <ChevronRight size={20} aria-hidden="true" className="text-esthe-muted" />
               </Link>
-            );
-          })}
-        </div>
+            </li>
+          ))}
+        </ul>
       </main>
-      <TabBar />
-    </div>
+    </>
   );
 }

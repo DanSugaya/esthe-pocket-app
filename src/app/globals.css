@@ -23,6 +23,8 @@
   --color-bg-sub: #F4F4F4;
   --color-overlay: rgba(18, 32, 106, 0.85);
   --color-scrim: rgba(0, 0, 0, 0.35);
+  /* 休み・満席・受付終了(§4.19)。上に置く文字は白 */
+  --color-status-off: #BDBDBD;
 
   /* ランクバッジ(1〜3位)。上に置く文字は --color-text */
   --color-rank-gold: #F5A623;
@@ -64,7 +66,8 @@
   --tabbar-total: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
 }
 
-/* Tailwind CSS v4: クラスとして使うためのテーマ登録 */
+/* Tailwind CSS v4: トークンをクラスとして使えるように登録
+   例) bg-esthe-primary / text-esthe-caption / rounded-esthe-md / text-title / shadow-esthe-action */
 @theme inline {
   --font-sans: var(--font-noto-sans-jp), "Hiragino Kaku Gothic ProN", "Yu Gothic", system-ui, sans-serif;
 
@@ -77,13 +80,78 @@
   --color-esthe-point: var(--color-accent-point);
   --color-esthe-success: var(--color-success);
   --color-esthe-sub: var(--color-bg-sub);
+  --color-esthe-text: var(--color-text);
+  --color-esthe-muted: var(--color-text-sub);
+  --color-esthe-caption: var(--color-text-caption);
+  --color-esthe-border: var(--color-border);
+  --color-esthe-divider: var(--color-divider-strong);
+  --color-esthe-overlay: var(--color-overlay);
+  --color-esthe-scrim: var(--color-scrim);
+  --color-esthe-off: var(--color-status-off);
+  --color-esthe-gold: var(--color-rank-gold);
+  --color-esthe-silver: var(--color-rank-silver);
+  --color-esthe-bronze: var(--color-rank-bronze);
+
+  --radius-esthe-sm: var(--radius-sm);
+  --radius-esthe-md: var(--radius-md);
+  --radius-esthe-lg: var(--radius-lg);
+
+  --shadow-esthe-float: var(--shadow-float);
+  --shadow-esthe-action: var(--shadow-action);
+
+  --ease-sheet: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* タイポグラフィ (designsystem §2.2)。ウェイトは font-bold 等で別指定 */
+  --text-h1: 20px;
+  --text-h1--line-height: 1.4;
+  --text-h2: 17px;
+  --text-h2--line-height: 1.4;
+  --text-stat: 18px;
+  --text-stat--line-height: 1;
+  --text-title: 14px;
+  --text-title--line-height: 1.4;
+  --text-btn: 16px;
+  --text-btn--line-height: 1;
+  --text-body: 13px;
+  --text-body--line-height: 1.6;
+  --text-caption: 12px;
+  --text-caption--line-height: 1.4;
+  --text-tab: 11px;
+  --text-tab--line-height: 1.2;
+  --text-badge: 11px;
+  --text-badge--line-height: 1;
 }
 
-/* 横スクロール行のスクロールバー非表示(Tailwind v4 標準には無いため自前定義) */
+/* 横スクロール行のスクロールバー非表示 */
 @utility scrollbar-none {
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* 押下フィードバック(§4.4 / §11: 不透明度 0.7・100ms) */
+@utility press {
+  transition: opacity 100ms ease-out;
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+@layer base {
+  html {
+    /* #anchor へのスクロール時に固定ヘッダーで隠れないようにする */
+    scroll-padding-top: var(--header-total);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+  /* フォーカスリング(§10)。primary 背景の上では各コンポーネントで outline-white に上書きする */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 }
 
@@ -92,6 +160,4 @@
 body {
   background: var(--color-bg);
   color: var(--color-text);
-  font-family: var(--font-noto-sans-jp), "Hiragino Kaku Gothic ProN", "Yu Gothic", system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
 }

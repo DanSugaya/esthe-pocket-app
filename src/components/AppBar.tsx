@@ -1,45 +1,73 @@
 import Link from 'next/link';
+import { ChevronLeft, Search } from 'lucide-react';
+import type { ReactNode } from 'react';
 
-// 4.1 App Bar。ステータスバー領域(safe-area-inset-top)も同色で塗る。
-// ロゴは見出しではないため h1 にしない(ページ側の h1 と重複させない)。
-export function AppBar() {
+/* §4.1 App Bar。固定ヘッダー + 同じ高さのスペーサーを返すので、ページ側で pt を付ける必要はない */
+
+const iconButton =
+  'flex h-11 w-11 items-center justify-center rounded-full text-white active:bg-esthe-primary-dark focus-visible:outline-white';
+
+export function HeaderIconLink({ href, label, children }: { href: string; label: string; children: ReactNode }) {
   return (
-    <header className="fixed inset-x-0 top-0 z-40 mx-auto flex h-[var(--header-total)] max-w-[720px] select-none items-center justify-between bg-[var(--color-primary)] px-4 pt-[env(safe-area-inset-top)] text-white">
-      {/* 左側ダミー(ロゴを中央に配置するためのスペース) */}
-      <div className="h-[44px] w-[44px]" aria-hidden="true" />
-
-      {/* 中央:ロゴ / サイト名 */}
-      <Link
-        href="/"
-        className="truncate rounded text-[18px] font-bold tracking-wide text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-      >
-        エステポケット
-      </Link>
-
-      {/* 右側:検索アイコン(タップ領域 44x44px) */}
-      <Link
-        href="/search"
-        aria-label="検索"
-        className="-mr-2 flex h-[44px] w-[44px] items-center justify-center rounded-full transition-opacity hover:opacity-80 active:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.75}
-          stroke="currentColor"
-          className="h-6 w-6"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z"
-          />
-        </svg>
-      </Link>
-    </header>
+    <Link href={href} aria-label={label} className={iconButton}>
+      {children}
+    </Link>
   );
 }
 
-export default AppBar;
+export function HeaderIconButton({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick?: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button type="button" aria-label={label} onClick={onClick} className={`relative ${iconButton}`}>
+      {children}
+    </button>
+  );
+}
+
+export function AppBar({
+  title,
+  backHref,
+  actions,
+}: {
+  /** 省略時はブランド名(TOP用) */
+  title?: string;
+  backHref?: string;
+  /** 右端。省略時は検索アイコン */
+  actions?: ReactNode;
+}) {
+  return (
+    <>
+      <header className="fixed inset-x-0 top-0 z-40 bg-esthe-primary pt-[env(safe-area-inset-top)] text-white">
+        <div className="mx-auto flex h-[var(--header-h)] max-w-[720px] items-center px-2">
+          {backHref && (
+            <HeaderIconLink href={backHref} label="前のページへ戻る">
+              <ChevronLeft size={24} aria-hidden="true" />
+            </HeaderIconLink>
+          )}
+          <div className="min-w-0 flex-1 px-2">
+            {title ? (
+              <h1 className="truncate text-h1 font-bold">{title}</h1>
+            ) : (
+              <Link href="/" className="text-h1 font-bold focus-visible:outline-white">
+                エステポケット
+              </Link>
+            )}
+          </div>
+          {actions ?? (
+            <HeaderIconLink href="/search" label="検索">
+              <Search size={24} aria-hidden="true" />
+            </HeaderIconLink>
+          )}
+        </div>
+      </header>
+      <div aria-hidden="true" className="h-[var(--header-total)]" />
+    </>
+  );
+}
